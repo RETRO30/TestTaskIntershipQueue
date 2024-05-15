@@ -1,7 +1,8 @@
 #pragma once
 #include "Queue.hpp"
 #include <array>
-#include "windows.h"
+#include <chrono>
+#include <thread>
 
 namespace iqt
 {
@@ -29,30 +30,13 @@ namespace iqt
         {
             RunnedTask = task;
         }
-
-        void SetTimer(unsigned int timer)
-        {
-            this->timer = timer;
-        }
-
-        unsigned int GetTimer()
-        {
-            return timer;
-        }
-
-        void tick()
-        {
-            if (timer > 0)
-            {
-                timer--;
-            }
-        }
     };
 
     class Controller
     {
     private:
         std::array<Runner *, 4> runners;
+        std::array<std::thread, 4> threads;
 
     public:
         Controller()
@@ -62,9 +46,9 @@ namespace iqt
             runners[2] = new Runner(new iqt::DelayedQueue("queueD2"));
             runners[3] = new Runner(new iqt::DelayedQueue("queueD3"));
 
-            runners[1]->queue->AddTask(new iqt::Task("TaskD1", "queueD1", 10, "TaskS1", "queueS1", 2, 1));
-            runners[2]->queue->AddTask(new iqt::Task("TaskD2", "queueD2", 10, "TaskS2", "queueS1", 2, 2));
-            runners[3]->queue->AddTask(new iqt::Task("TaskD3", "queueD3", 10, "TaskS3", "queueS1", 2, 1));
+            runners[1]->queue->AddTask(new iqt::Task("TaskD1", "queueD1", 10, "TaskS1", "queueS1", 5, 1));
+            runners[2]->queue->AddTask(new iqt::Task("TaskD2", "queueD2", 10, "TaskS2", "queueS1", 6, 2));
+            runners[3]->queue->AddTask(new iqt::Task("TaskD3", "queueD3", 10, "TaskS3", "queueS1", 7, 1));
         }
         ~Controller()
         {
@@ -76,67 +60,35 @@ namespace iqt
 
         void Update()
         {
+
             for (int i = 0; i < 4; i++)
             {
                 if (runners[i]->RunnedTask == nullptr)
                 {
                     runners[i]->RunnedTask = runners[i]->queue->GetTask();
+
                     if (runners[i]->RunnedTask != nullptr)
                     {
-                        if (i == 0)
-                        {
-                            runners[i]->RunnedTask->LogStartSimpleTask();
-                        }
-                        else
-                        {
-                            runners[i]->RunnedTask->LogStartDeleyedTask();
-                        }
-                        if (i == 0)
-                        {
-                            runners[i]->SetTimer(runners[i]->RunnedTask->GetSimpleTaskDelay());
-                        }
-                        else
-                        {
-                            runners[i]->SetTimer(runners[i]->RunnedTask->GetDelayedTaskDelay());
-                        }
+                        threads[i] = std::thread(&iqt::Task::Run, runners[i]->RunnedTask);
+                        threads[i].detach();
                     }
                 }
                 else
                 {
-                    if (runners[i]->GetTimer() == 0)
+                    if (runners[i]->RunnedTask->isDone)
                     {
-                        if (i == 0)
-                        {
-                            runners[i]->RunnedTask->LogEndSimpleTask();
-                        }
-                        else
-                        {
-                            runners[i]->RunnedTask->LogEndDeleyedTask();
-                        }
                         for (int j = 0; j < 4; j++)
                         {
-                            if (runners[i]->RunnedTask->GetCurrentQueue() != runners[i]->RunnedTask->GetSimpleQueueName())
+                            if (runners[i]->RunnedTask->GetNextQueue() == runners[j]->queue->GetQueueName())
                             {
-                                if (runners[j]->queue->GetQueueName() == runners[i]->RunnedTask->GetSimpleQueueName())
-                                {
-                                    runners[j]->queue->AddTask(runners[i]->RunnedTask);
-                                    runners[i]->RunnedTask = nullptr;
-                                    break;
-                                }
-                            }
-                            else
-                            {
-                                if (runners[j]->queue->GetQueueName() == runners[i]->RunnedTask->GetDelayedQueueName())
-                                {
-                                    runners[j]->queue->AddTask(runners[i]->RunnedTask);
-                                    runners[i]->RunnedTask = nullptr;
-                                    break;
-                                }
+                                runners[i]->RunnedTask->isDone = false;
+                                runners[j]->queue->AddTask(runners[i]->RunnedTask);
+                                runners[i]->RunnedTask = nullptr;
+                                break;
                             }
                         }
                     }
                 }
-                runners[i]->tick();
             }
         }
 
@@ -145,7 +97,6 @@ namespace iqt
             while (true)
             {
                 Update();
-                Sleep(1000);
             }
         }
     };

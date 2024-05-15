@@ -3,6 +3,8 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
+#include <thread>
+#include <chrono>
 
 namespace iqt
 {
@@ -25,6 +27,8 @@ namespace iqt
         unsigned int sTaskPriority;
 
     public:
+        bool isDone = false;
+
         Task(std::string _dTaskName, std::string _dTaskQueue, unsigned int _dTaskDelay, std::string _sTaskName, std::string _sTaskQueue, unsigned int _sTaskDelay, unsigned int _sTaskPriority)
         {
             dTaskName = _dTaskName;
@@ -36,6 +40,44 @@ namespace iqt
             sTaskPriority = _sTaskPriority;
         };
 
+        bool isDelayed()
+        {
+            return GetCurrentQueue() == dTaskQueue;
+        }
+
+        bool isSimple()
+        {
+            return GetCurrentQueue() == sTaskQueue;
+        }
+
+        void Run()
+        {
+            if (isSimple())
+            {
+                RunSimpleTask();
+            }
+            else if (isDelayed())
+            {
+                RunDelayedTask();
+            }
+        }
+
+        void RunDelayedTask()
+        {
+            LogStartDeleyedTask();
+            std::this_thread::sleep_for(std::chrono::seconds(dTaskDelay));
+            LogEndDeleyedTask();
+            isDone = true;
+        }
+
+        void RunSimpleTask()
+        {
+            LogStartSimpleTask();
+            std::this_thread::sleep_for(std::chrono::seconds(sTaskDelay));
+            LogEndSimpleTask();
+            isDone = true;
+        }
+
         void SetCurrentQueue(std::string _currentQueue)
         {
             currentQueue = _currentQueue;
@@ -45,6 +87,18 @@ namespace iqt
         {
             return currentQueue;
         };
+
+        std::string GetNextQueue()
+        {
+            if (isDelayed())
+            {
+                return sTaskQueue;
+            }
+            else
+            {
+                return dTaskQueue;
+            }
+        }
 
         std::string GetSimpleTaskName()
         {
@@ -81,6 +135,18 @@ namespace iqt
             return dTaskDelay;
         };
 
+        unsigned int GetDelay()
+        {
+            if (isDelayed())
+            {
+                return GetDelayedTaskDelay();
+            }
+            else
+            {
+                return GetSimpleTaskDelay();
+            }
+        }
+
         std::string GetDeleyedTaskData()
         {
             return GetTimeNow() + " : " + GetDelayedQueueName() + " : " + GetDelayedTaskName() + " - " + std::to_string(GetDelayedTaskDelay());
@@ -93,22 +159,22 @@ namespace iqt
 
         void LogStartDeleyedTask()
         {
-            std::cout << GetDeleyedTaskData() << " : " << "created" << std::endl;
+            std::cout << GetDeleyedTaskData() + " : " + "created\n";
         };
 
         void LogEndDeleyedTask()
         {
-            std::cout << GetDeleyedTaskData() << " : (" << GetSimpleTaskData() << ") : " << "pushed" << std::endl;
+            std::cout << GetDeleyedTaskData() + " : (" + GetSimpleTaskData() + ") : " << "pushed\n";
         };
 
         void LogStartSimpleTask()
         {
-            std::cout << GetSimpleTaskData() << " : " << "running..." << std::endl;
+            std::cout << GetSimpleTaskData() + " : " + "running...\n";
         };
 
         void LogEndSimpleTask()
         {
-            std::cout << GetSimpleTaskData() << " : " << "complited" << std::endl;
+            std::cout << GetSimpleTaskData() + " : " + "complited\n";
         };
     };
 }
