@@ -83,12 +83,12 @@ namespace iqt
 
         std::string GetDeleyedTaskData()
         {
-            return GetTimeNow() + " : " + GetCurrentQueue() + " : " + GetDelayedTaskName() + " - " + std::to_string(GetDelayedTaskDelay());
+            return GetTimeNow() + " : " + GetDelayedQueueName() + " : " + GetDelayedTaskName() + " - " + std::to_string(GetDelayedTaskDelay());
         }
 
         std::string GetSimpleTaskData()
         {
-            return GetTimeNow() + " : " + GetCurrentQueue() + " : " + GetSimpleTaskName() + " - " + std::to_string(GetSimpleTaskDelay());
+            return GetTimeNow() + " : " + GetSimpleQueueName() + " : " + GetSimpleTaskName() + " - " + std::to_string(GetSimpleTaskDelay());
         }
 
         void LogStartDeleyedTask()

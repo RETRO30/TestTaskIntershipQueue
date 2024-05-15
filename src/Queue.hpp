@@ -88,6 +88,7 @@ namespace iqt
 
         void AddTask(iqt::Task *task)
         {
+            task->SetCurrentQueue(GetQueueName());
             queue.push(task);
         };
 
