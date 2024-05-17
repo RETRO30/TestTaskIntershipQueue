@@ -58,6 +58,46 @@ namespace iqt
             }
         }
 
+        void ExecuteRunners()
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                if (runners[i]->RunnedTask == nullptr)
+                {
+                    runners[i]->RunnedTask = runners[i]->queue->GetTask();
+
+                    if (runners[i]->RunnedTask != nullptr)
+                    {
+                        threads[i] = std::thread(&iqt::Task::Run, runners[i]->RunnedTask);
+                        threads[i].detach();
+                    }
+                }
+            }
+        }
+
+        void GetResults()
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                if (runners[i]->RunnedTask != nullptr)
+                {
+                    if (runners[i]->RunnedTask->isDone)
+                    {
+                        for (int j = 0; j < 4; j++)
+                        {
+                            if (runners[i]->RunnedTask->GetNextQueue() == runners[j]->queue->GetQueueName())
+                            {
+                                runners[i]->RunnedTask->isDone = false;
+                                runners[j]->queue->AddTask(runners[i]->RunnedTask);
+                                runners[i]->RunnedTask = nullptr;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         void Update()
         {
 
@@ -96,7 +136,9 @@ namespace iqt
         {
             while (true)
             {
-                Update();
+                ExecuteRunners();
+                GetResults();
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
         }
     };
