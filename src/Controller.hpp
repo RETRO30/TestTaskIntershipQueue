@@ -30,6 +30,20 @@ namespace iqt
         {
             RunnedTask = task;
         }
+
+        void Run()
+        {
+            while (true)
+            {
+                if (RunnedTask != nullptr)
+                {
+                    if (!RunnedTask->isDone)
+                    {
+                        RunnedTask->Run();
+                    }
+                }
+            }
+        }
     };
 
     class Controller
@@ -68,7 +82,7 @@ namespace iqt
 
                     if (runners[i]->RunnedTask != nullptr)
                     {
-                        threads[i] = std::thread(&iqt::Task::Run, runners[i]->RunnedTask);
+                        threads[i] = std::thread(&iqt::Runner::Run, runners[i]);
                         threads[i].detach();
                     }
                 }
@@ -89,41 +103,6 @@ namespace iqt
                             {
                                 runners[i]->RunnedTask->isDone = false;
                                 runners[j]->queue->AddTask(runners[i]->RunnedTask);
-                                runners[i]->RunnedTask = nullptr;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        void Update()
-        {
-
-            for (int i = 0; i < 4; i++)
-            {
-                if (runners[i]->RunnedTask == nullptr)
-                {
-                    runners[i]->RunnedTask = runners[i]->queue->GetTask();
-
-                    if (runners[i]->RunnedTask != nullptr)
-                    {
-                        threads[i] = std::thread(&iqt::Task::Run, runners[i]->RunnedTask);
-                        threads[i].detach();
-                    }
-                }
-                else
-                {
-                    if (runners[i]->RunnedTask->isDone)
-                    {
-                        for (int j = 0; j < 4; j++)
-                        {
-                            if (runners[i]->RunnedTask->GetNextQueue() == runners[j]->queue->GetQueueName())
-                            {
-                                runners[i]->RunnedTask->isDone = false;
-                                runners[j]->queue->AddTask(runners[i]->RunnedTask);
-                                runners[i]->RunnedTask = nullptr;
                                 break;
                             }
                         }
@@ -134,9 +113,9 @@ namespace iqt
 
         void Run()
         {
+            ExecuteRunners();
             while (true)
             {
-                ExecuteRunners();
                 GetResults();
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
