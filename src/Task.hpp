@@ -14,11 +14,11 @@ namespace iqt
         auto now_time_t = std::chrono::system_clock::to_time_t(now);
         auto now_tm = *std::localtime(&now_time_t);
         auto duration = now.time_since_epoch();
-        auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration) % 1000;
+        auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration) % 10000;
 
         std::ostringstream oss;
         oss << std::put_time(&now_tm, "%H:%M:%S")
-            << ":" << std::setw(3) << std::setfill('0') << millis.count();
+            << ":" << std::setw(5) << std::setfill('0') << millis.count();
 
         return oss.str();
     };
