@@ -10,12 +10,16 @@ namespace iqt
 {
     std::string GetTimeNow()
     {
-        std::time_t currentTime = std::time(nullptr);
-        std::tm *localTime = std::localtime(&currentTime);
+        auto now = std::chrono::system_clock::now();
+        auto now_time_t = std::chrono::system_clock::to_time_t(now);
+        auto now_tm = *std::localtime(&now_time_t);
+        auto duration = now.time_since_epoch();
+        auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration) % 1000;
+
         std::ostringstream oss;
-        oss << std::setw(2) << std::setfill('0') << localTime->tm_hour << ":"
-            << std::setw(2) << std::setfill('0') << localTime->tm_min << ":"
-            << std::setw(2) << std::setfill('0') << localTime->tm_sec;
+        oss << std::put_time(&now_tm, "%H:%M:%S")
+            << ":" << std::setw(3) << std::setfill('0') << millis.count();
+
         return oss.str();
     };
 

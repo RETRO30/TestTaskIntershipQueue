@@ -63,9 +63,9 @@ namespace iqt
             runners[2] = new Runner(new iqt::DelayedQueue("queueD2"));
             runners[3] = new Runner(new iqt::DelayedQueue("queueD3"));
 
-            runners[1]->queue->AddTask(new iqt::Task("TaskD1", "queueD1", 4, "TaskS1", "queueS1", 2, 1));
-            runners[2]->queue->AddTask(new iqt::Task("TaskD2", "queueD2", 4, "TaskS2", "queueS1", 2, 1));
-            runners[3]->queue->AddTask(new iqt::Task("TaskD3", "queueD3", 4, "TaskS3", "queueS1", 2, 1));
+            runners[1]->queue->AddTask(new iqt::Task("TaskD1", "queueD1", 2, "TaskS1", "queueS1", 2, 1));
+            runners[2]->queue->AddTask(new iqt::Task("TaskD2", "queueD2", 2, "TaskS2", "queueS1", 2, 2));
+            runners[3]->queue->AddTask(new iqt::Task("TaskD3", "queueD3", 4, "TaskS3", "queueS1", 15, 3));
         }
         ~Controller()
         {
